@@ -1,0 +1,214 @@
+<script type='text/x-red' data-template-name='mongodb-config'>
+  <div class='form-row'>
+    <label for='node-config-input-hostname'>
+      <i class='fa fa-bookmark'></i><span>host</span>
+    </label>
+    <input class='input-append-left' type='text'
+           id='node-config-input-hostname'
+           placeholder='localhost' style='width: 40%' >
+    <label for='node-config-input-port' style='margin-left:10pxwidth:35px'>
+      <span>port</span>
+    </label>
+    <input type='text' id='node-config-input-port' style='width:45px'>
+  </div>
+
+  <div class='form-row'>
+    <label for='node-config-input-db'>
+      <i class='fa fa-database'></i>
+      <span>Database</span>
+    </label>
+    <input type='text' id='node-config-input-db'>
+  </div>
+
+  <div class='form-row'>
+    <label for='node-config-input-user'>
+      <i class='fa fa-user'></i>
+      <span>Username</span>
+    </label>
+    <input type='text' id='node-config-input-user'>
+  </div>
+
+  <div class='form-row'>
+    <label for='node-config-input-password'>
+      <i class='fa fa-lock'></i>
+      <span>Password</span>
+    </label>
+    <input type='password' id='node-config-input-password'>
+  </div>
+
+  <div class='form-row'>
+    <label for='node-config-input-name'>
+      <i class='fa fa-tag'></i>
+      <span>Name</span>
+    </label>
+    <input type='text' id='node-config-input-name'>
+  </div>
+</script>
+
+<script type='text/javascript'>
+  RED.nodes.registerType('mongodb-config', {
+    category: 'config',
+    color: 'rgb(218, 196, 180)',
+    defaults: {
+      hostname: {value: '127.0.0.1', required: true},
+      port: {value: 27017, required: true},
+      db: {value: '', required: true},
+      name: {value: ''}
+    },
+    credentials: {
+      user: {type: 'text'},
+      password: {type: 'password'}
+    },
+    label: function() {
+      return this.name || this.hostname + ':' + this.port + '/' + this.db
+    }
+  })
+</script>
+
+
+<script type='text/x-red' data-template-name='mongodb-crud'>
+  <div class='form-row'>
+    <label for='node-input-mongodb'>
+      <i class='fa fa-bookmark'></i>
+      <span>Server</span>
+    </label>
+    <input type='text' id='node-input-mongodb'>
+  </div>
+
+  <div class='form-row'>
+    <label for='node-input-collection'>
+      <i class='fa fa-briefcase'></i>
+      <span>Collection</span>
+    </label>
+    <input type='text' id='node-input-collection'>
+  </div>
+
+  <div class='form-row'>
+    <label for='node-input-operation'>
+      <i class='fa fa-wrench'></i>
+      <span>Operation</span>
+    </label>
+    <select type='text' id='node-input-operation'
+            style='display: inline-block; vertical-align: top'>
+      <option value='save'>save</option>
+      <option value='insert'>insert</option>
+      <option value='update'>update</option>
+      <option value='delete'>delete</option>
+      <option value='find'>find</option>
+      <option value='count'>count</option>
+      <option value='aggregate'>aggregate</option>
+    </select>
+  </div>
+
+  <div class='form-row node-input-upsert operation-opt'>
+    <label>&nbsp</label>
+    <input type='checkbox' id='node-input-upsert'
+           style='display: inline-block width: auto vertical-align: top'>
+    <label for='node-input-upsert' style='width: 70%'>
+      <span>Insert a new document if no match is found</span>
+    </label>
+  </div>
+
+  <div class='form-row node-input-multi operation-opt'>
+    <label>&nbsp</label>
+    <input type='checkbox' id='node-input-multi'
+           style='display: inline-block width: auto vertical-align: top'>
+    <label for='node-input-multi' style='width: 70%'>
+      <span>Update all documents</span>
+    </label>
+  </div>
+
+  <div class='form-row node-input-single operation-opt'>
+    <label>&nbsp</label>
+    <input type='checkbox' id='node-input-single'
+           style='display: inline-block width: auto vertical-align: top'>
+    <label for='node-input-multi' style='width: 70%'>
+      <span>Delete only the first document found</span>
+    </label>
+  </div>
+
+  <div class='form-row node-input-nooutput operation-opt'>
+    <label>&nbsp</label>
+    <input type='checkbox' id='node-input-nooutput'
+           style='display: inline-block width: auto vertical-align: top'>
+    <label for='node-input-multi' style='width: 70%'>
+      <span>Do not output result</span>
+    </label>
+  </div>
+
+  <div class='form-row'>
+    <label for='node-input-name'>
+      <i class='fa fa-tag'></i>
+      <span data-i18n='node-red:common.label.name'></span>
+    </label>
+    <input type='text' id='node-input-name'>
+  </div>
+
+  <div class='form-tips' id='node-warning' style='display: none'>
+    <span data-i18n='[html]mongodb.tip'></span>
+  </div>
+</script>
+
+<script type='text/x-red' data-help-name='mongodb-crud'>
+  <p>mongo crud</p>
+</script>
+
+<script type='text/javascript'>
+
+  RED.nodes.registerType('mongodb-crud', {
+    category: 'storage-output',
+    color: 'rgb(218, 196, 180)',
+    defaults: {
+      mongodb: {type: 'mongodb-config', required: true},
+      name: {value: ''},
+      collection: {value: ''},
+      payonly: {value: false},
+      upsert: {value: false},
+      multi: {value: false},
+      operation: {value: null},
+      nooutput: {value: false}
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: 'mongodb.png',
+    align: 'right',
+    label: function() {
+      var mongoNode = RED.nodes.node(this.mongodb)
+      return this.name || (mongoNode ? mongoNode.label() + ' ' + this.collection: 'mongodb')
+    },
+    labelStyle: function() {
+      return this.name ? 'node_label_italic' : ''
+    },
+    oneditprepare: function oneditprepare() {
+      var node = this
+      var opts = {
+        'update': '.node-input-upsert, .node-input-multi .node-input-nooutput',
+        'delete': '.node-input-single, .node-input-nooutput',
+        'save': '.node-input-nooutput',
+        'insert': '.node-input-nooutput'
+      }
+
+      $('#node-input-operation').change(function () {
+        var id = $('#node-input-operation option:selected').val()
+        $('.operation-opt').hide()
+        if (opts[id])
+          $(opts[id]).show()
+        else
+          $('#node-input-nooutput').prop('checked', false)
+      })
+
+      $('#node-input-collection').change(function () {
+        if($('#node-input-collection').val() === '') {
+          $('#node-warning').show()
+        } else {
+          $('#node-warning').hide()
+        }
+      })
+
+      $('#node-input-nooutput').change(function () {
+        node.nooutput = $('#node-input-nooutput').prop('checked')
+        node.outputs = node.nooutput ? 0 : 1
+      })
+    }
+  })
+</script>
